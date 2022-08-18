@@ -1,21 +1,11 @@
-# Right now writing detailed YOLO v3 tutorials for TensorFlow 2.x<br>
-Detection and custom training process works better, is more accurate and has more planned features to do:<br>
-https://github.com/pythonlessons/TensorFlow-2.x-YOLOv3
+# Download YOLOv3 weights from the YOLO website, or use wget command:
 
-# YOLOv3-object-detection-tutorial
+```wget https://pjreddie.com/media/files/yolov3.weights```
 
-More information:<br>
-https://pylessons.com/YOLOv3-custom-data/<br>
-and<br>
-https://pylessons.com/YOLOv3-custom-training/<br>
-<br>
-How to use YOLO v3 with webcam:<br>
-https://pylessons.com/YOLOv3-WebCam/<br>
-<br>
-In future will update readme file
+# Copy downloaded weights file to model_data folder and convert the Darknet YOLO model to a Keras model:
 
-<b>Requirements:</b><br>
-TensorFlow 1.15<br>
-Keras 2.2.4<br>
-Numpy (all versions should work)<br>
-opencv-python (all versions should work)<br>
+```python convert.py model_data/yolov3.cfg model_data/yolov3.weights model_data/yolo_weights.h5```
+
+# Run Program
+
+Run webcam_detect.py 
