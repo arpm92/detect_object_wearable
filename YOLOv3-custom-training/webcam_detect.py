@@ -13,6 +13,9 @@ from keras.layers import Input
 from yolo3.model import yolo_eval, yolo_body, tiny_yolo_body
 from yolo3.utils import image_preporcess
 
+import traceback
+import logging
+
 ################# 
 # Disable eager execution for TF > 2.x and python 3.9.1 to solve error: 
 # ValueError: Subshape must have computed start >= end since stride is negative, but is 0 and 2 (computed from start 0 and end 9223372036854775807 over shape with rank 2 and stride-1)
@@ -104,64 +107,67 @@ class YOLO(object):
         return boxes, scores, classes
 
     def detect_image(self, image):
-        if self.model_image_size != (None, None):
-            assert self.model_image_size[0]%32 == 0, 'Multiples of 32 required'
-            assert self.model_image_size[1]%32 == 0, 'Multiples of 32 required'
-            boxed_image = image_preporcess(np.copy(image), tuple(reversed(self.model_image_size)))
-            image_data = boxed_image
 
-        out_boxes, out_scores, out_classes = self.sess.run(
-            [self.boxes, self.scores, self.classes],
-            feed_dict={
-                self.yolo_model.input: image_data,
-                self.input_image_shape: [image.shape[0], image.shape[1]],#[image.size[1], image.size[0]],
-                K.learning_phase(): 0
-            })
+        try :
+            if self.model_image_size != (None, None):
+                assert self.model_image_size[0]%32 == 0, 'Multiples of 32 required'
+                assert self.model_image_size[1]%32 == 0, 'Multiples of 32 required'
+                boxed_image = image_preporcess(np.copy(image), tuple(reversed(self.model_image_size)))
+                image_data = boxed_image
 
-        #print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
+            out_boxes, out_scores, out_classes = self.sess.run(
+                [self.boxes, self.scores, self.classes],
+                feed_dict={
+                    self.yolo_model.input: image_data,
+                    self.input_image_shape: [image.shape[0], image.shape[1]],#[image.size[1], image.size[0]],
+                    K.learning_phase(): 0
+                })
 
-        thickness = (image.shape[0] + image.shape[1]) // 600
-        fontScale=1
-        ObjectsList = []
-        
-        for i, c in reversed(list(enumerate(out_classes))):
-            predicted_class = self.class_names[c]
-            box = out_boxes[i]
-            score = out_scores[i]
+            #print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
 
-            if predicted_class in self.track_only:
+            thickness = (image.shape[0] + image.shape[1]) // 600
+            fontScale=1
+            ObjectsList = []
+            
+            for i, c in reversed(list(enumerate(out_classes))):
+                predicted_class = self.class_names[c]
+                box = out_boxes[i]
+                score = out_scores[i]
 
-                #label = '{} {:.2f}'.format(predicted_class, score)
-                label = '{}'.format(predicted_class)
-                scores = '{:.2f}'.format(score)
+                if predicted_class in self.track_only:
 
-                top, left, bottom, right = box
-                top = max(0, np.floor(top + 0.5).astype('int32'))
-                left = max(0, np.floor(left + 0.5).astype('int32'))
-                bottom = min(image.shape[0], np.floor(bottom + 0.5).astype('int32'))
-                right = min(image.shape[1], np.floor(right + 0.5).astype('int32'))
+                    #label = '{} {:.2f}'.format(predicted_class, score)
+                    label = '{}'.format(predicted_class)
+                    scores = '{:.2f}'.format(score)
 
-                mid_v = ((bottom-top)/2+top).astype('int32')
-                mid_h = ((right-left)/2+left).astype('int32')
+                    top, left, bottom, right = box
+                    top = max(0, np.floor(top + 0.5).astype('int32'))
+                    left = max(0, np.floor(left + 0.5).astype('int32'))
+                    bottom = min(image.shape[0], np.floor(bottom + 0.5).astype('int32'))
+                    right = min(image.shape[1], np.floor(right + 0.5).astype('int32'))
 
-                # put object rectangle
-                cv2.rectangle(image, (left, top), (right, bottom), self.colors[c], thickness)
+                    mid_v = ((bottom-top)/2+top).astype('int32')
+                    mid_h = ((right-left)/2+left).astype('int32')
 
-                # get text size
-                (test_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, 1)
+                    # put object rectangle
+                    cv2.rectangle(image, (left, top), (right, bottom), self.colors[c], thickness)
 
-                # put text rectangle
-                cv2.rectangle(image, (left, top), (left + test_width, top - text_height - baseline), self.colors[c], thickness=cv2.FILLED)
+                    # get text size
+                    (test_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, 1)
 
-                # put text above rectangle
-                cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, (0, 0, 0), 1)
+                    # put text rectangle
+                    cv2.rectangle(image, (left, top), (left + test_width, top - text_height - baseline), self.colors[c], thickness=cv2.FILLED)
 
-                # draw middle point of objet
-                cv2.circle(image, (mid_h, mid_v), (5), (0,0,255), thickness=cv2.FILLED)
+                    # put text above rectangle
+                    cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, (0, 0, 0), 1)
 
-                # add everything to list
-                ObjectsList.append([top, left, bottom, right, mid_h, mid_v, label, scores])
+                    # draw middle point of objet
+                    cv2.circle(image, (mid_h, mid_v), (5), (0,0,255), thickness=cv2.FILLED)
 
+                    # add everything to list
+                    ObjectsList.append([top, left, bottom, right, mid_h, mid_v, label, scores])
+        except Exception as e:
+            logging.error(traceback.format_exc())
 
         return image, ObjectsList
 
@@ -190,36 +196,39 @@ if __name__=="__main__":
     fps = 0
 
     # we create the video capture object cap
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(2)
     if not cap.isOpened():
         raise IOError("We cannot open webcam")
 
     while True:
-        ret, frame = cap.read()
-        # resize our captured frame if we need
-        frame = cv2.resize(frame, None, fx=1.0, fy=1.0, interpolation=cv2.INTER_AREA)
+        try:
+            ret, frame = cap.read()
+            # resize our captured frame if we need
+            frame = cv2.resize(frame, None, fx=1.0, fy=1.0, interpolation=cv2.INTER_AREA)
 
-        # # detect object on our frame
-        r_image, ObjectsList = yolo.detect_img(frame)
+            # # detect object on our frame
+            r_image, ObjectsList = yolo.detect_img(frame)
 
-        for object in ObjectsList:
-            if 'person' in object[6]:
-                cv2.putText(r_image, ('{},{}'.format(object[4],object[5])), (object[4]-3,object[5]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
+            for object in ObjectsList:
+                if 'person' in object[6]:
+                    cv2.putText(r_image, ('{},{}'.format(object[4],object[5])), (object[4]-3,object[5]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
 
-        # r_image = frame
-        # show us frame with detection
-        cv2.imshow("Web cam input", r_image)
-        if cv2.waitKey(25) & 0xFF == ord("q"):
-            cv2.destroyAllWindows()
-            break
+            # r_image = frame
+            # show us frame with detection
+            cv2.imshow("Web cam input", r_image)
+            if cv2.waitKey(25) & 0xFF == ord("q"):
+                cv2.destroyAllWindows()
+                break
 
-        # calculate FPS
-        fps += 1
-        TIME = time.time() - start_time
-        if TIME > display_time:
-            print("FPS:", fps / TIME)
-            fps = 0 
-            start_time = time.time()
+            # calculate FPS
+            fps += 1
+            TIME = time.time() - start_time
+            if TIME > display_time:
+                print("FPS:", fps / TIME)
+                fps = 0 
+                start_time = time.time()
+        except Exception as e:
+            logging.error(traceback.format_exc())
 
 
     cap.release()
