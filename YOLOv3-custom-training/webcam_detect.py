@@ -153,13 +153,13 @@ class YOLO(object):
                     cv2.rectangle(image, (left, top), (right, bottom), self.colors[c], thickness)
 
                     # get text size
-                    (test_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, 1)
+                    (test_width, text_height), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, self.text_size, 1)
 
                     # put text rectangle
                     cv2.rectangle(image, (left, top), (left + test_width, top - text_height - baseline), self.colors[c], thickness=cv2.FILLED)
 
                     # put text above rectangle
-                    cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, (0, 0, 0), 1)
+                    cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, self.text_size, (0, 0, 0), 1)
 
                     # draw middle point of objet
                     cv2.circle(image, (mid_h, mid_v), (5), (0,0,255), thickness=cv2.FILLED)
@@ -196,7 +196,7 @@ if __name__=="__main__":
     fps = 0
 
     # we create the video capture object cap
-    cap = cv2.VideoCapture(2)
+    cap = cv2.VideoCapture(0)
     if not cap.isOpened():
         raise IOError("We cannot open webcam")
 
