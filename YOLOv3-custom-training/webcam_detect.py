@@ -131,8 +131,8 @@ class YOLO(object):
 
             if predicted_class in self.track_only:
 
-                label = '{} {:.2f}'.format(predicted_class, score)
-                #label = '{}'.format(predicted_class)
+                #label = '{} {:.2f}'.format(predicted_class, score)
+                label = '{}'.format(predicted_class)
                 scores = '{:.2f}'.format(score)
 
                 top, left, bottom, right = box
@@ -141,8 +141,8 @@ class YOLO(object):
                 bottom = min(image.shape[0], np.floor(bottom + 0.5).astype('int32'))
                 right = min(image.shape[1], np.floor(right + 0.5).astype('int32'))
 
-                mid_h = (bottom-top)/2+top
-                mid_v = (right-left)/2+left
+                mid_v = ((bottom-top)/2+top).astype('int32')
+                mid_h = ((right-left)/2+left).astype('int32')
 
                 # put object rectangle
                 cv2.rectangle(image, (left, top), (right, bottom), self.colors[c], thickness)
@@ -156,8 +156,12 @@ class YOLO(object):
                 # put text above rectangle
                 cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, thickness/self.text_size, (0, 0, 0), 1)
 
+                # draw middle point of objet
+                cv2.circle(image, (mid_h, mid_v), (5), (0,0,255), thickness=cv2.FILLED)
+
                 # add everything to list
-                ObjectsList.append([top, left, bottom, right, mid_v, mid_h, label, scores])
+                ObjectsList.append([top, left, bottom, right, mid_h, mid_v, label, scores])
+
 
         return image, ObjectsList
 
@@ -197,6 +201,10 @@ if __name__=="__main__":
 
         # # detect object on our frame
         r_image, ObjectsList = yolo.detect_img(frame)
+
+        for object in ObjectsList:
+            if 'person' in object[6]:
+                cv2.putText(r_image, ('{},{}'.format(object[4],object[5])), (object[4]-3,object[5]), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 3)
 
         # r_image = frame
         # show us frame with detection
