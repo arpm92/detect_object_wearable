@@ -3,3 +3,5 @@ venv/
 *.h5
 
 YOLOv3-CSGO-detection/*
+
+*.mp4
