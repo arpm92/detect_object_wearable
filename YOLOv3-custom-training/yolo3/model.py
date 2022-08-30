@@ -125,20 +125,20 @@ def yolo_head(feats, anchors, num_classes, input_shape, calc_loss=False):
     # Reshape to batch, height, width, num_anchors, box_params.
     anchors_tensor = K.reshape(K.constant(anchors), [1, 1, 1, num_anchors, 2])
 
-    grid_shape = K.shape(feats)[1:3] # height, width
+    grid_shape = K.placeholder(shape=(2, ),dtype='int32')  # K.shape(feats)[1:3] # height, width
     grid_y = K.tile(K.reshape(K.arange(0, stop=grid_shape[0]), [-1, 1, 1, 1]),
         [1, grid_shape[1], 1, 1])
     grid_x = K.tile(K.reshape(K.arange(0, stop=grid_shape[1]), [1, -1, 1, 1]),
         [grid_shape[0], 1, 1, 1])
     grid = K.concatenate([grid_x, grid_y])
-    grid = K.cast(grid, K.dtype(feats))
+    grid = K.cast(grid, feats['shape'].dtype)
 
     feats = K.reshape(
         feats, [-1, grid_shape[0], grid_shape[1], num_anchors, num_classes + 5])
 
     # Adjust preditions to each spatial grid point and anchor size.
-    box_xy = (K.sigmoid(feats[..., :2]) + grid) / K.cast(grid_shape[::-1], K.dtype(feats))
-    box_wh = K.exp(feats[..., 2:4]) * anchors_tensor / K.cast(input_shape[::-1], K.dtype(feats))
+    box_xy = (K.sigmoid(feats[..., :2]) + grid) / K.cast(grid_shape[::-1], feats['shape'].dtype)
+    box_wh = K.exp(feats[..., 2:4]) * anchors_tensor / K.cast(input_shape[::-1], feats['shape'].dtype)
     box_confidence = K.sigmoid(feats[..., 4:5])
     box_class_probs = K.sigmoid(feats[..., 5:])
 
@@ -194,7 +194,7 @@ def yolo_eval(yolo_outputs,
     """Evaluate YOLO model on given input and return filtered boxes."""
     num_layers = len(yolo_outputs)
     anchor_mask = [[6,7,8], [3,4,5], [0,1,2]] if num_layers==3 else [[3,4,5], [1,2,3]] # default setting
-    input_shape = K.shape(yolo_outputs[0])[1:3] * 32
+    input_shape = K.placeholder(shape=(2, ),dtype='int32')#K.shape(yolo_outputs[0])[1:3] * 32
     boxes = []
     box_scores = []
     for l in range(num_layers):

@@ -16,7 +16,6 @@ from safe_region import draw_safe_regions, check_object_in_area
 
 current_path = os.getcwd()
 
-
 ###########
 
 if __name__=="__main__":

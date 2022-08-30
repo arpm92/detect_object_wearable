@@ -4,6 +4,8 @@ os.environ['CUDA_VISIBLE_DEVICES'] = '0'
 import cv2
 import time
 
+import tensorflow as tf
+
 
 import numpy as np
 from keras import backend as K
@@ -27,7 +29,7 @@ current_path = os.getcwd()
 
 class YOLO(object):
     _defaults = {
-        "model_path": os.path.join(current_path,'YOLOv3-custom-training/model_data/yolo_weights.h5'),
+        "model_path": os.path.join(current_path,'saved_custom_model/model_lite.tflite'),
         "anchors_path": os.path.join(current_path,'YOLOv3-custom-training/model_data/yolo_anchors.txt'),
         "classes_path": os.path.join(current_path,'YOLOv3-custom-training/model_data/coco_classes.txt'),
         "score" : 0.3,
@@ -69,25 +71,21 @@ class YOLO(object):
         return np.array(anchors).reshape(-1, 2)
 
     def generate(self):
+
         model_path = os.path.expanduser(self.model_path)
-        assert model_path.endswith('.h5'), 'Keras model or weights must be a .h5 file.'
+        assert model_path.endswith('.tflite'), 'Keras model or weights must be a .tflite file.'
 
-        # Load model, or construct model and load weights.
-        num_anchors = len(self.anchors)
-        num_classes = len(self.class_names)
-        is_tiny_version = num_anchors==6 # default setting
         try:
-            self.yolo_model = load_model(model_path, compile=False)
+            self.yolo_model = tf.lite.Interpreter(model_path)
+            # Get model details
+            self.input_details = self.yolo_model.get_input_details()
+            self.output_details = self.yolo_model.get_output_details()
+            self.height = self.input_details[0]['shape'][1]
+            self.width = self.input_details[0]['shape'][2]
         except:
-            self.yolo_model = tiny_yolo_body(Input(shape=(None,None,3)), num_anchors//2, num_classes) \
-                if is_tiny_version else yolo_body(Input(shape=(None,None,3)), num_anchors//3, num_classes)
-            self.yolo_model.load_weights(self.model_path) # make sure model, anchors and classes match
-        else:
-            assert self.yolo_model.layers[-1].output_shape[-1] == \
-                num_anchors/len(self.yolo_model.output) * (num_classes + 5), \
-                'Mismatch between model and given anchor and class sizes'
+            print('Error loading model')
 
-        print('{} model, anchors, and classes loaded.'.format(model_path))
+        print('{} model loaded.'.format(model_path))
 
         # Generate colors for drawing bounding boxes.
         hsv_tuples = [(x / len(self.class_names), 1., 1.)
@@ -100,11 +98,22 @@ class YOLO(object):
         np.random.shuffle(self.colors)  # Shuffle colors to decorrelate adjacent classes.
 
         # Generate output tensor targets for filtered bounding boxes.
-        self.input_image_shape = K.placeholder(shape=(2, ))
-        boxes, scores, classes = yolo_eval(self.yolo_model.output, self.anchors,
-                len(self.class_names), self.input_image_shape,
-                score_threshold=self.score, iou_threshold=self.iou)
-        return boxes, scores, classes
+        # self.input_image_shape = K.placeholder(shape=(2, ))
+        # boxes, scores, classes = yolo_eval(self.yolo_model.get_output_details(), self.anchors,
+        #         len(self.class_names), self.input_image_shape,
+        #         score_threshold=self.score, iou_threshold=self.iou)
+
+        # Check output layer name to determine if this model was created with TF2 or TF1,
+        # because outputs are ordered differently for TF2 and TF1 models
+        outname = self.output_details[0]['name']
+
+        if ('StatefulPartitionedCall' in outname): # This is a TF2 model
+            boxes_idx, classes_idx, scores_idx = 1, 3, 0
+        else: # This is a TF1 model
+            boxes_idx, classes_idx, scores_idx = 0, 1, 2
+
+        #boxes, scores, classes = (K.placeholder(shape=(None, 4),dtype='float32'), K.placeholder(shape=(None,),dtype='float32'), K.placeholder(shape=(None,),dtype='int32'))
+        return boxes_idx, scores_idx, classes_idx
 
     def detect_image(self, image):
 
@@ -115,13 +124,22 @@ class YOLO(object):
                 boxed_image = image_preporcess(np.copy(image), tuple(reversed(self.model_image_size)))
                 image_data = boxed_image
 
-            out_boxes, out_scores, out_classes = self.sess.run(
-                [self.boxes, self.scores, self.classes],
-                feed_dict={
-                    self.yolo_model.input: image_data,
-                    self.input_image_shape: [image.shape[0], image.shape[1]],#[image.size[1], image.size[0]],
-                    K.learning_phase(): 0
-                })
+            # out_boxes, out_scores, out_classes = self.sess.run(
+            #     [self.boxes, self.scores, self.classes],
+            #     feed_dict={
+            #         self.yolo_model.get_input_details()[0]['index']: image_data,
+            #         self.input_image_shape: [image.shape[0], image.shape[1]],#[image.size[1], image.size[0]],
+            #         K.learning_phase(): 0
+            #     })
+
+            # Perform the actual detection by running the model with the image as input
+            self.yolo_model.set_tensor(self.input_details[0]['index'],image_data)
+            self.yolo_model.invoke()
+
+            # Retrieve detection results
+            out_boxes = self.yolo_model.get_tensor(self.output_details[self.boxes]['index'])[0] # Bounding box coordinates of detected objects
+            out_classes = self.yolo_model.get_tensor(self.output_details[self.classes]['index'])[0] # Class index of detected objects
+            out_scores = self.yolo_model.get_tensor(self.output_details[self.scores]['index'])[0] # Confidence of detected objects
 
             #print('Found {} boxes for {}'.format(len(out_boxes), 'img'))
 
