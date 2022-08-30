@@ -3,3 +3,8 @@ venv/
 *.h5
 
 YOLOv3-CSGO-detection/*
+
+*.mp4
+
+saved_custom_model/*
+*.tflite

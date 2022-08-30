@@ -162,7 +162,7 @@ class YOLO(object):
                     cv2.putText(image, label, (left, top-2), cv2.FONT_HERSHEY_SIMPLEX, self.text_size, (0, 0, 0), 1)
 
                     # draw middle point of objet
-                    cv2.circle(image, (mid_h, mid_v), (5), (0,0,255), thickness=cv2.FILLED)
+                    cv2.circle(image, (mid_h, mid_v), (5), (255,51,153), thickness=cv2.FILLED)
 
                     # add everything to list
                     ObjectsList.append([top, left, bottom, right, mid_h, mid_v, label, scores])
