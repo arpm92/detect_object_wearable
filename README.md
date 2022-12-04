@@ -1,6 +1,6 @@
 # About
 
-This projects utilizes Yolov3 to detect specific objects on the images. Once the object is detected, it will be tracked and if it goes inside delimited areas, their marker will change on color.
+This projects utilizes Yolov3 to detect specific objects on the images. Once the object is detected, it will be tracked and if it goes inside delimited areas, their marker will change on color. The original 80 objects from COCO dataset are in use, but a filter was implemented to display just the items of interest.
 
 The overall idea is to set up a system to recognize specific objects and their location and stablish safe zones, where if certain objects get-in, it will be used as a trigger for further actions.
 
