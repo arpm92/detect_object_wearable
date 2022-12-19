@@ -15,6 +15,24 @@ def returnCameraIndexes():
         i -= 1
     return arr
 
-cam_index = returnCameraIndexes()
 
-print(cam_index)
+def cam(input=0):
+    cap = cv2.VideoCapture(input)
+    while True:
+        ret, frame = cap.read()
+        frame = cv2.cvtColor(src=frame, code=cv2.COLOR_BGR2RGB)
+        cv2.imshow('webcam', frame)# press escape to exit
+        if (cv2.waitKey(30) == 27):
+            break
+    cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+
+    cam_index = returnCameraIndexes()
+
+    print(cam_index)
+
+
+    cam(0)
