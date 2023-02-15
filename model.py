@@ -87,6 +87,8 @@ class YOLO():
                     confidences.append(float(confidence))
                     boxes.append([x, y, w, h])
 
+
+
         # apply non-max suppression
         indices = cv2.dnn.NMSBoxes(boxes, confidences, conf_threshold, nms_threshold)
 
@@ -100,8 +102,8 @@ class YOLO():
             w = box[2]
             h = box[3]
 
-            obj['x'] = round(x)
-            obj['y'] = round(y)
+            obj['x'] = round(x+w/2)
+            obj['y'] = round(y+h/2)
             obj['w'] = round(w)
             obj['h'] = round(h)
 
@@ -114,6 +116,18 @@ class YOLO():
             obj_list.append(obj.copy())
             
             if draw_box:
-                self.draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h,),classes, COLORS, detected_labels)
+                self.draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h),classes, COLORS, detected_labels)
 
         return image, obj_list
+
+    def prepare_yolo_input(self,image):
+
+        scale = 0.00392
+
+        # create input blob 
+        blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
+
+        # set input blob for the network
+        self.model.setInput(blob) # this is the image representation as blob to be the input in the network
+
+        return image, blob
