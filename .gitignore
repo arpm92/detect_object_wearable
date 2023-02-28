@@ -1,5 +1,5 @@
 venv/
-*.weights 
+yolov3.weights 
 *.h5
 
 YOLOv3-CSGO-detection/*
