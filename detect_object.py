@@ -46,7 +46,7 @@ if __name__ == "__main__":
     h = 480
     w = 640
     camera.resolution = (640, 480)
-    #camera.framerate = 30
+    camera.framerate = 2
     camera.rotation = 180
     rawCapture = PiRGBArray(camera)
     time.sleep(1.1)
@@ -63,14 +63,14 @@ if __name__ == "__main__":
     #warning_zone = 0.5
     warning_color = (0,255,255)
     #roi_warning = cv2.selectROI(frame)
-    roi_warning = [157, 86, 341, 356]
+    roi_warning = [160, 130, 350, 350]
     print(f'ROI Warning: {roi_warning}')
     roi_warning_zone = [roi_warning[0],roi_warning[1],(roi_warning[2] + roi_warning[0]), (roi_warning[3] + roi_warning[1])]
 
     #danger_zone = 0.3
     danger_color = (0,0,255)
     #roi_danger = cv2.selectROI(frame)
-    roi_danger = [157, 86, 341, 356]
+    roi_danger = [230, 200, 200, 280]
     roi_danger_zone = [roi_danger[0],roi_danger[1],(roi_danger[2] + roi_danger[0]), (roi_danger[3] + roi_danger[1])]
     print(f'ROI Danger: {roi_danger}')
 
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
         frame2, blob =  yolo.prepare_yolo_input(frame2)
 
-        image, detected_objects = yolo.model_inference(frame2.copy(), classes, COLORS, track_only, draw_box=True)
+        image, detected_objects = yolo.model_inference(frame2, classes, COLORS, track_only, draw_box=True)
 
         image = draw_rectangular_safe_regions(image,roi_danger_zone,danger_color)
 
