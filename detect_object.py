@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
 
     # define model
-    yolo = YOLO()
+    yolo = YOLO(tiny=True)
 
     # read the classes and asign colors
     classes, COLORS = yolo.classes_colors()

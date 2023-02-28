@@ -5,12 +5,18 @@ import numpy as np
 
 class YOLO():
 
-    def __init__(self) -> None:
+    def __init__(self,tiny=False) -> None:
         cwdir = os.getcwd()
 
-        self.conf_path = os.path.join(cwdir,'YOLOv3-custom-training/model_data/yolov3.cfg')
-        self.weight_path = os.path.join(cwdir,'YOLOv3-custom-training/model_data/yolov3.weights')
-        self.classes_path = os.path.join(cwdir,'YOLOv3-custom-training/model_data/coco_classes.txt')
+        if tiny:
+            self.conf_path = os.path.join(cwdir,'Yolov3_tiny/yolov3-tiny.cfg')
+            self.weight_path = os.path.join(cwdir,'Yolov3_tiny/yolov3-tiny.weights')
+            self.classes_path = os.path.join(cwdir,'Yolov3_tiny/coco.names')
+
+        else:
+            self.conf_path = os.path.join(cwdir,'YOLOv3-custom-training/model_data/yolov3.cfg')
+            self.weight_path = os.path.join(cwdir,'YOLOv3-custom-training/model_data/yolov3.weights')
+            self.classes_path = os.path.join(cwdir,'YOLOv3-custom-training/model_data/coco_classes.txt')
 
         self.model = cv2.dnn.readNet(self.weight_path, self.conf_path)
 
