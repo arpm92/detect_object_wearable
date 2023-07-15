@@ -32,7 +32,7 @@ class YOLO():
         return output_layers
 
     # function to draw bounding box on the detected object with class name
-    def draw_bounding_box(self,img, class_id, confidence, x, y, x_plus_w, y_plus_h,classes, COLORS, detected_labels):
+    def draw_bounding_box(self,img, class_id, confidence, x, y, x_plus_w, y_plus_h,classes, COLORS, detected_labels,w=0,h=0,dist=0):
 
         label = str(classes[class_id])
 
@@ -42,7 +42,11 @@ class YOLO():
 
             cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 2)
 
-            cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+            cv2.putText(img, (str(int(confidence*100))+"%"), (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+            cv2.putText(img, (label), (x+25,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+            cv2.putText(img, (f"{w},{h}"), (x-5,y-25), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
+            cv2.putText(img, (f"distance: {dist}cm"), (x-5,y-45), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 1)
 
     def classes_colors(self):
          # read class names from text file
@@ -54,6 +58,18 @@ class YOLO():
         COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 
         return classes, COLORS
+    
+    def calculate_dist(self, w,label):
+
+        dist = 999
+
+        if label == "person":
+            # People distance calculation
+            #dist = round((0.0156 * w * w - 6.9074 * w + 719.71 + 160),2)
+            dist = round((0.0162 * w * w - 7.3712 * w + 792 + 160),2) 
+
+        return dist
+
 
     def model_inference(self,image, classes, COLORS, detected_labels, draw_box=True, min_confidence = 0.5):
 
@@ -102,6 +118,7 @@ class YOLO():
         # go through the detections remaining
         # after nms and draw bounding box
         for i in indices:
+
             i = i[0]
             box = boxes[i]
             x = box[0]
@@ -114,8 +131,13 @@ class YOLO():
             obj['w'] = round(w)
             obj['h'] = round(h)
 
+            obj['ID'] = "unknown"
+
+
             label = str(classes[class_ids[i]])
 
+            obj['dist'] = self.calculate_dist(w,label)
+ 
             if label in detected_labels:
 
                 obj['ID'] = label
@@ -123,7 +145,7 @@ class YOLO():
             obj_list.append(obj.copy())
             
             if draw_box:
-                self.draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h),classes, COLORS, detected_labels)
+                self.draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h),classes, COLORS, detected_labels,round(w),round(h),obj['dist'])
 
         return image, obj_list
 

@@ -13,6 +13,8 @@ import numpy as np
 
 from model import YOLO
 
+import pygame
+
 #from safe_region import check_object_in_rectangular_area, draw_rectangular_safe_regions
 
 
@@ -35,6 +37,11 @@ def set_res(cap, x,y):
 #############
 
 if __name__ == "__main__":
+
+    # Set sounds
+    pygame.init()
+    pygame.mixer.init()
+    sounda= pygame.mixer.Sound("beep-sound.wav")
 
 
     # define model
@@ -91,11 +98,19 @@ if __name__ == "__main__":
         
         # frame2 = frame.array
         
-        print(frame.shape)
+        #print(frame.shape)
 
         frame2, blob =  yolo.prepare_yolo_input(frame)
 
-        image, detected_objects = yolo.model_inference(frame2, classes, COLORS, track_only, draw_box=True, min_confidence=0.3)
+        image, detected_objects = yolo.model_inference(frame2, classes, COLORS, track_only, draw_box=True, min_confidence=0.1)
+
+        for detected_object in detected_objects:
+            print(detected_object)
+
+            if detected_object['ID'] == 'person' and detected_object['dist'] < 200:
+                sounda.play()
+                
+
 
         # display output image    
         cv2.imshow("object detection", frame2)
