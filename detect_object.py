@@ -60,33 +60,27 @@ if __name__ == "__main__":
 
 
     # ret, frame = cam.read()
+    # initialize the camera and grab a reference to the raw camera capture
     camera = PiCamera()
-    h = 480
-    w = 640
     camera.resolution = (640, 480)
-    camera.framerate = 2
-    camera.rotation = 180
-    rawCapture = PiRGBArray(camera)
-    time.sleep(1.1)
-    
-    camera.capture(rawCapture, format='bgr')
-    frame = rawCapture.array
-    rawCapture.truncate(0)
+    camera.framerate = 32
+    rawCapture = PiRGBArray(camera, size=(640, 480))
 
-    cv2.destroyAllWindows()
+    # allow the camera to warmup
+    time.sleep(0.1)
+
+    #cv2.destroyAllWindows()
     
 
-    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
     # while True:
     #     ret, frame = cam.read()
     #     if not ret:
     #        print("failed to grab frame")
     #        break
+
+    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         
-        time.sleep(0.5)
-        camera.capture(rawCapture, format='bgr')
-        frame = rawCapture.array
-        time.sleep(0.5)
+        frame = frame.array
 
         k = cv2.waitKey(1)
         if k%256 == 27:
@@ -96,9 +90,7 @@ if __name__ == "__main__":
 
         detected_objects = []
         
-        frame2 = frame.array
-        
-        print(frame.shape)
+        # print(frame.shape)
 
         frame2, blob =  yolo.prepare_yolo_input(frame)
 
@@ -115,8 +107,9 @@ if __name__ == "__main__":
         # display output image    
         cv2.imshow("object detection", frame2)
         
-        # rawCapture.truncate(0)
+        # clear the stream in preparation for the next frame
+        rawCapture.truncate(0)
 
 
-    cam.release()
+    #cam.release()
     cv2.destroyAllWindows()
