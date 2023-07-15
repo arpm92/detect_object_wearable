@@ -119,7 +119,7 @@ class YOLO():
         # after nms and draw bounding box
         for i in indices:
 
-            i = i[0]
+            # i = i[0] # uncomment for cv2
             box = boxes[i]
             x = box[0]
             y = box[1]
