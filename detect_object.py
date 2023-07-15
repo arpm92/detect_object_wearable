@@ -6,6 +6,7 @@ import numpy as np
 import picamera
 from picamera import PiCamera
 from picamera.array import PiRGBArray
+import argparse
 
 # import io
 # import traceback
@@ -15,8 +16,8 @@ from model import YOLO
 
 import pygame
 
-#from safe_region import check_object_in_rectangular_area, draw_rectangular_safe_regions
-
+display = True
+draw_box = True
 
 track_only = ['person',
                 'bicycle',
@@ -37,6 +38,14 @@ def set_res(cap, x,y):
 #############
 
 if __name__ == "__main__":
+
+    # Create the parser
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--display", "-d",  help="directory to upload",default=False)
+
+    args = parser.parse_args()
+
+    display = args.display
 
     # Set sounds
     pygame.init()
@@ -94,7 +103,7 @@ if __name__ == "__main__":
 
         frame2, blob =  yolo.prepare_yolo_input(frame)
 
-        image, detected_objects = yolo.model_inference(frame2, classes, COLORS, track_only, draw_box=True, min_confidence=0.1)
+        image, detected_objects = yolo.model_inference(frame2, classes, COLORS, track_only, draw_box=draw_box, min_confidence=0.1)
 
         for detected_object in detected_objects:
             print(detected_object)
@@ -104,8 +113,9 @@ if __name__ == "__main__":
                 
 
 
-        # display output image    
-        cv2.imshow("object detection", frame2)
+        if display == True:
+            # display output image    
+            cv2.imshow("object detection", frame2)
         
         # clear the stream in preparation for the next frame
         rawCapture.truncate(0)
