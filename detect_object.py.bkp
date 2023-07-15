@@ -3,9 +3,9 @@ import cv2
 import time
 import numpy as np
 # import os
-import picamera
-from picamera import PiCamera
-from picamera.array import PiRGBArray
+# import picamera
+# from picamera import PiCamera
+# from picamera.array import PiRGBArray
 
 # import io
 # import traceback
@@ -50,43 +50,43 @@ if __name__ == "__main__":
     # read the classes and asign colors
     classes, COLORS = yolo.classes_colors()
 
-    # video_input = 0
-    # cam = cv2.VideoCapture(video_input) # detect from webcam
+    video_input = 0
+    cam = cv2.VideoCapture(video_input) # detect from webcam
 
-    # res = set_res(cam, 680,480)
+    res = set_res(cam, 680,480)
 
-    # print(f'Resolution: {res}')
+    print(f'Resolution: {res}')
 
 
 
-    # ret, frame = cam.read()
-    camera = PiCamera()
-    h = 480
-    w = 640
-    camera.resolution = (640, 480)
-    camera.framerate = 2
-    camera.rotation = 180
-    rawCapture = PiRGBArray(camera)
+    ret, frame = cam.read()
+    # camera = PiCamera()
+    # h = 480
+    # w = 640
+    # camera.resolution = (640, 480)
+    # camera.framerate = 2
+    # camera.rotation = 180
+    # rawCapture = PiRGBArray(camera)
     time.sleep(1.1)
     
-    camera.capture(rawCapture, format='bgr')
-    frame = rawCapture.array
-    rawCapture.truncate(0)
+    # camera.capture(rawCapture, format='bgr')
+    # frame = rawCapture.array
+    # rawCapture.truncate(0)
 
     cv2.destroyAllWindows()
     
 
-    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
-    # while True:
-    #     ret, frame = cam.read()
-    #     if not ret:
-    #        print("failed to grab frame")
-    #        break
+    # for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+    while True:
+        ret, frame = cam.read()
+        if not ret:
+           print("failed to grab frame")
+           break
         
-        time.sleep(0.5)
-        camera.capture(rawCapture, format='bgr')
-        frame = rawCapture.array
-        time.sleep(0.5)
+        #time.sleep(0.5)
+        #camera.capture(rawCapture, format='bgr')
+        #frame = rawCapture.array
+        #time.sleep(0.5)
 
         k = cv2.waitKey(1)
         if k%256 == 27:
@@ -96,9 +96,9 @@ if __name__ == "__main__":
 
         detected_objects = []
         
-        frame2 = frame.array
+        # frame2 = frame.array
         
-        print(frame.shape)
+        #print(frame.shape)
 
         frame2, blob =  yolo.prepare_yolo_input(frame)
 

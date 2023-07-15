@@ -26,8 +26,8 @@ class YOLO():
         
         layer_names = net.getLayerNames()
         
-        # output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()] # working with cv2
-        output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()] # working with picamera
+        output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()] # working with cv2
+        #output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()] # working with picamera
 
         return output_layers
 
