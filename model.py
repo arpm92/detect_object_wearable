@@ -26,8 +26,8 @@ class YOLO():
         
         layer_names = net.getLayerNames()
         
-        #output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()]
-        output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()]
+        output_layers = [layer_names[i[0] - 1] for i in net.getUnconnectedOutLayers()] # working with cv2
+        #output_layers = [layer_names[i - 1] for i in net.getUnconnectedOutLayers()] # working with picamera
 
         return output_layers
 
@@ -55,7 +55,7 @@ class YOLO():
 
         return classes, COLORS
 
-    def model_inference(self,image, classes, COLORS, detected_labels, draw_box=True):
+    def model_inference(self,image, classes, COLORS, detected_labels, draw_box=True, min_confidence = 0.5):
 
         obj = {}
 
@@ -83,7 +83,7 @@ class YOLO():
                 scores = detection[5:]
                 class_id = np.argmax(scores)
                 confidence = scores[class_id]
-                if confidence > 0.5:
+                if confidence > min_confidence:
                     center_x = int(detection[0] * Width)
                     center_y = int(detection[1] * Height)
                     w = int(detection[2] * Width)
@@ -102,7 +102,7 @@ class YOLO():
         # go through the detections remaining
         # after nms and draw bounding box
         for i in indices:
-            #i = i[0]
+            i = i[0]
             box = boxes[i]
             x = box[0]
             y = box[1]
@@ -129,10 +129,10 @@ class YOLO():
 
     def prepare_yolo_input(self,image):
 
-        scale = 0.00392
+        scale = 1/255.0 #0.00392
 
         # create input blob 
-        blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), True, crop=False)
+        blob = cv2.dnn.blobFromImage(image, scale, (416,416), (0,0,0), swapRB=True, crop=False)
 
         # set input blob for the network
         self.model.setInput(blob) # this is the image representation as blob to be the input in the network
