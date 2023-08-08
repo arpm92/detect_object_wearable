@@ -46,6 +46,15 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     display = args.display
+    
+    print(type(display),display)
+    
+    if display == "true" or display == "True" or display == '1':
+        display = True
+    else:
+        display = False
+        
+    print(type(display),display)
 
     # Set sounds
     pygame.init()
@@ -108,10 +117,9 @@ if __name__ == "__main__":
         for detected_object in detected_objects:
             print(detected_object)
 
-            if detected_object['ID'] == 'person' and detected_object['dist'] < 200:
+            if detected_object['ID'] == 'person' and detected_object['dist'] > 200:
                 sounda.play()
                 
-
 
         if display == True:
             # display output image    
