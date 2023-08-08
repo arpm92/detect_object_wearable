@@ -41,7 +41,7 @@ if __name__ == "__main__":
 
     # Create the parser
     parser = argparse.ArgumentParser()
-    parser.add_argument("--display", "-d",  help="directory to upload",default=False)
+    parser.add_argument("--display", "-d",  help="display True or False",default=False)
 
     args = parser.parse_args()
 
