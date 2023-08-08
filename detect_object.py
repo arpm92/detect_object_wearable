@@ -8,6 +8,9 @@ from picamera import PiCamera
 from picamera.array import PiRGBArray
 import argparse
 
+from datetime import datetime
+datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
 # import io
 # import traceback
 # import sys
@@ -15,6 +18,13 @@ import argparse
 from model import YOLO
 
 import pygame
+
+output_path = '/home/pi/detect_object_wearable/log'
+
+def custom_print(message_to_print, log_file=output_path + '/output.txt'):
+    print(message_to_print)
+    with open(log_file, 'a') as of:
+        of.write(message_to_print + '\n')
 
 display = True
 draw_box = True
@@ -46,8 +56,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     display = args.display
-    
-    print(type(display),display)
     
     if display == "true" or display == "True" or display == '1':
         display = True
@@ -115,9 +123,10 @@ if __name__ == "__main__":
         image, detected_objects = yolo.model_inference(frame2, classes, COLORS, track_only, draw_box=draw_box, min_confidence=0.1)
 
         for detected_object in detected_objects:
-            print(detected_object)
+            detected_object['time'] = str(datetime.now())
+            custom_print(str(detected_object))
 
-            if detected_object['ID'] == 'person' and detected_object['dist'] > 200:
+            if detected_object['ID'] == 'person' and detected_object['dist'] < 200:
                 sounda.play()
                 
 
