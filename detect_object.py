@@ -126,7 +126,8 @@ if __name__ == "__main__":
             detected_object['time'] = str(datetime.now())
             custom_print(str(detected_object))
 
-            if detected_object['ID'] == 'person' and detected_object['dist'] < 200:
+            #if detected_object['ID'] == 'person' and detected_object['dist'] < 200:
+            if detected_object['ID'] == 'person':
                 sounda.play()
                 
 
